@@ -47,7 +47,8 @@ document.getElementById("perdidasLic").innerText=perdidas
 
 dados.sort((a,b)=> new Date(a.data)-new Date(b.data))
 
-let hoje = new Date().toISOString().split("T")[0]
+let hoje = new Date()
+hoje = hoje.getFullYear()+"-"+String(hoje.getMonth()+1).padStart(2,'0')+"-"+String(hoje.getDate()).padStart(2,'0')
 
 let html=""
 
