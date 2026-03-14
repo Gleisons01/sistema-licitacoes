@@ -1,23 +1,25 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
 import sqlite3
 import os
-from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = "editais"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+UPLOAD_FOLDER = "uploads"
 
-# -------------------------
-# CRIAR BANCO AUTOMATICO
-# -------------------------
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+
+def conectar():
+    conn = sqlite3.connect("banco.db")
+    conn.row_factory = sqlite3.Row
+    return conn
+
 
 def criar_banco():
-    conn = sqlite3.connect("banco.db")
-    c = conn.cursor()
-
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS licitacoes (
+    conn = conectar()
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS licitacoes(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         data TEXT,
         hora TEXT,
@@ -32,171 +34,144 @@ def criar_banco():
         edital TEXT
     )
     """)
-
     conn.commit()
     conn.close()
 
+
 criar_banco()
 
-# -------------------------
-# ROTAS DE PAGINA
-# -------------------------
 
 @app.route("/")
 def login():
     return render_template("login.html")
 
+
 @app.route("/painel")
 def painel():
     return render_template("painel.html")
 
-# -------------------------
-# LISTAR LICITAÇÕES
-# -------------------------
 
 @app.route("/listar")
 def listar():
-
-    conn = sqlite3.connect("banco.db")
-    conn.row_factory = sqlite3.Row
-
-    c = conn.cursor()
-    c.execute("SELECT * FROM licitacoes")
-
-    dados = [dict(row) for row in c.fetchall()]
-
+    conn = conectar()
+    dados = conn.execute("SELECT * FROM licitacoes").fetchall()
     conn.close()
 
-    return jsonify(dados)
+    lista = []
 
-# -------------------------
-# SALVAR LICITAÇÃO
-# -------------------------
+    for l in dados:
+        lista.append(dict(l))
+
+    return jsonify(lista)
+
 
 @app.route("/salvar", methods=["POST"])
 def salvar():
 
-    data = request.form.get("data")
-    hora = request.form.get("hora")
-    pregao = request.form.get("pregao")
-    uasg = request.form.get("uasg")
-    estado = request.form.get("estado")
-    orgao = request.form.get("orgao")
-    servico = request.form.get("servico")
-    valor = request.form.get("valor")
-    modalidade = request.form.get("modalidade")
-    status = request.form.get("status")
-
-    edital = None
+    edital_nome = ""
 
     if "edital" in request.files:
-
         file = request.files["edital"]
 
         if file.filename != "":
-            nome = secure_filename(file.filename)
-            caminho = os.path.join(UPLOAD_FOLDER, nome)
+            edital_nome = file.filename
+            caminho = os.path.join(UPLOAD_FOLDER, edital_nome)
             file.save(caminho)
-            edital = nome
 
-    conn = sqlite3.connect("banco.db")
-    c = conn.cursor()
+    conn = conectar()
 
-    c.execute("""
-    INSERT INTO licitacoes
-    (data,hora,pregao,uasg,estado,orgao,servico,valor,modalidade,status,edital)
+    conn.execute("""
+    INSERT INTO licitacoes(
+        data,hora,pregao,uasg,estado,orgao,servico,valor,modalidade,status,edital
+    )
     VALUES (?,?,?,?,?,?,?,?,?,?,?)
-    """, (data,hora,pregao,uasg,estado,orgao,servico,valor,modalidade,status,edital))
+    """, (
+        request.form["data"],
+        request.form["hora"],
+        request.form["pregao"],
+        request.form["uasg"],
+        request.form["estado"],
+        request.form["orgao"],
+        request.form["servico"],
+        request.form["valor"],
+        request.form["modalidade"],
+        request.form["status"],
+        edital_nome
+    ))
 
     conn.commit()
     conn.close()
 
     return "ok"
 
-# -------------------------
-# EDITAR LICITAÇÃO
-# -------------------------
 
 @app.route("/editar/<int:id>", methods=["POST"])
 def editar(id):
 
-    data = request.form.get("data")
-    hora = request.form.get("hora")
-    pregao = request.form.get("pregao")
-    uasg = request.form.get("uasg")
-    estado = request.form.get("estado")
-    orgao = request.form.get("orgao")
-    servico = request.form.get("servico")
-    valor = request.form.get("valor")
-    modalidade = request.form.get("modalidade")
-    status = request.form.get("status")
-
-    edital = None
+    edital_nome = request.form.get("edital_antigo", "")
 
     if "edital" in request.files:
-
         file = request.files["edital"]
 
         if file.filename != "":
-            nome = secure_filename(file.filename)
-            caminho = os.path.join(UPLOAD_FOLDER, nome)
+            edital_nome = file.filename
+            caminho = os.path.join(UPLOAD_FOLDER, edital_nome)
             file.save(caminho)
-            edital = nome
 
-    conn = sqlite3.connect("banco.db")
-    c = conn.cursor()
+    conn = conectar()
 
-    if edital:
-
-        c.execute("""
-        UPDATE licitacoes SET
-        data=?,hora=?,pregao=?,uasg=?,estado=?,orgao=?,
-        servico=?,valor=?,modalidade=?,status=?,edital=?
-        WHERE id=?
-        """,(data,hora,pregao,uasg,estado,orgao,servico,valor,modalidade,status,edital,id))
-
-    else:
-
-        c.execute("""
-        UPDATE licitacoes SET
-        data=?,hora=?,pregao=?,uasg=?,estado=?,orgao=?,
-        servico=?,valor=?,modalidade=?,status=?
-        WHERE id=?
-        """,(data,hora,pregao,uasg,estado,orgao,servico,valor,modalidade,status,id))
+    conn.execute("""
+    UPDATE licitacoes SET
+    data=?,
+    hora=?,
+    pregao=?,
+    uasg=?,
+    estado=?,
+    orgao=?,
+    servico=?,
+    valor=?,
+    modalidade=?,
+    status=?,
+    edital=?
+    WHERE id=?
+    """, (
+        request.form["data"],
+        request.form["hora"],
+        request.form["pregao"],
+        request.form["uasg"],
+        request.form["estado"],
+        request.form["orgao"],
+        request.form["servico"],
+        request.form["valor"],
+        request.form["modalidade"],
+        request.form["status"],
+        edital_nome,
+        id
+    ))
 
     conn.commit()
     conn.close()
 
     return "ok"
 
-# -------------------------
-# EXCLUIR
-# -------------------------
 
 @app.route("/excluir/<int:id>")
 def excluir(id):
 
-    conn = sqlite3.connect("banco.db")
-    c = conn.cursor()
-
-    c.execute("DELETE FROM licitacoes WHERE id=?", (id,))
-
+    conn = conectar()
+    conn.execute("DELETE FROM licitacoes WHERE id=?", (id,))
     conn.commit()
     conn.close()
 
     return "ok"
 
-# -------------------------
-# BAIXAR EDITAL
-# -------------------------
 
-@app.route("/edital/<nome>")
-def edital(nome):
-    return send_from_directory("editais", nome)
+@app.route("/uploads/<filename>")
+def baixar(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
-# -------------------------
-# RODAR SISTEMA
-# -------------------------
 
+# CONFIGURAÇÃO PARA RENDER
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
