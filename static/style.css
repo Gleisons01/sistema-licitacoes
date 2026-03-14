@@ -1,6 +1,6 @@
 body{
   background:#eef2f7;
-  font-family:Arial;
+  font-family:Arial, sans-serif;
 }
 
 .container{
@@ -9,46 +9,57 @@ body{
 
 .dashboard{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-  gap:10px;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:12px;
   margin-bottom:20px;
 }
 
-.card{
+.dashboard-card{
   border-radius:10px;
-  border:0;
   background:white;
   box-shadow:0 4px 10px rgba(0,0,0,0.05);
+  padding:12px;
+  transition:0.2s;
+}
+
+.dashboard-card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 8px 15px rgba(0,0,0,0.08);
+}
+
+.card-title{
+  font-size:14px;
+  color:#555;
+}
+
+.card-value{
+  font-size:22px;
+  font-weight:bold;
+  margin-top:4px;
+}
+
+.filtros-toolbar{
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.filtro-input{
+  height:36px;
+  max-width:200px;
+}
+
+.card{
+  border-radius:12px;
+  border:0;
+  background:white;
+  box-shadow:0 4px 12px rgba(0,0,0,0.05);
   transition:0.2s;
   cursor:pointer;
 }
 
 .card:hover{
-  transform:translateY(-3px);
+  transform:translateY(-2px);
   box-shadow:0 8px 15px rgba(0,0,0,0.08);
-}
-
-.card-small{
-  padding:10px;
-  text-align:center;
-}
-
-.card-small .icon{
-  font-size:24px;
-  margin-bottom:5px;
-}
-
-.card-small h4{
-  margin:0;
-}
-
-.filtros-toolbar{
-  gap:8px;
-}
-
-.filtro-select,.filtro-input{
-  height:36px;
-  max-width:200px;
 }
 
 .card p{

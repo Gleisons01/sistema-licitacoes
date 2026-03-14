@@ -7,7 +7,7 @@ function formatarData(data){
 }
 
 function abrirNova(){
-  licitacaoAtual=null;
+  licitacaoAtual = null;
   document.getElementById("formLic").reset();
   let modal = new bootstrap.Modal(document.getElementById("modalLic"));
   modal.show();
@@ -17,13 +17,13 @@ async function carregar(){
   let r = await fetch("/listar");
   let dados = await r.json();
 
-  // filtros
-  let filtroMes = document.getElementById("filtroMes").value; // "01".."12"
+  // Filtros
+  let filtroMes = document.getElementById("filtroMes").value; // YYYY-MM
   let filtroOrgao = document.getElementById("filtroOrgao")?.value.toLowerCase() || "";
   let filtroEstado = document.getElementById("filtroEstado")?.value || "";
 
   if(filtroMes){
-    dados = dados.filter(l => l.data.split("-")[1] === filtroMes);
+    dados = dados.filter(l => l.data.startsWith(filtroMes));
   }
   if(filtroOrgao){
     dados = dados.filter(l => l.orgao.toLowerCase().includes(filtroOrgao));
@@ -32,7 +32,7 @@ async function carregar(){
     dados = dados.filter(l => l.estado === filtroEstado);
   }
 
-  // contagem cards
+  // Contagem cards
   let total=0, andamento=0, ganhas=0, perdidas=0;
   dados.forEach(l=>{
     total++;
@@ -46,16 +46,14 @@ async function carregar(){
   document.getElementById("ganhasLic").innerText = ganhas;
   document.getElementById("perdidasLic").innerText = perdidas;
 
-  // destaque hoje
+  // Destaque hoje
   let hoje = new Date();
   hoje = hoje.getFullYear()+"-"+String(hoje.getMonth()+1).padStart(2,'0')+"-"+String(hoje.getDate()).padStart(2,'0');
-
   let licHoje = dados.filter(l => l.data === hoje);
-
   document.getElementById("alertaHoje").innerHTML = licHoje.length>0 ?
     `<div class="alert alert-primary">⚠ Você possui <b>${licHoje.length}</b> licitação(ões) hoje</div>` : "";
 
-  // gerar lista compacta
+  // Lista compacta
   let html="";
   dados.forEach(l=>{
     let cor="status-cinza";
@@ -85,7 +83,7 @@ async function carregar(){
   document.getElementById("lista").innerHTML = html;
 }
 
-// Eventos e modal permanecem iguais
+// Modal e submit permanecem iguais
 document.getElementById("formLic").addEventListener("submit", async function(e){
   e.preventDefault();
   let form = new FormData(this);

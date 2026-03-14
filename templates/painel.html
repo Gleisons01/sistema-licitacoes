@@ -15,72 +15,7 @@
 
 <h3 class="mb-3">Controle de Licitações</h3>
 
-<!-- Cards compactos -->
-<div class="dashboard" id="dashboardCards">
-  <div class="card card-small">
-    <div class="card-body text-center">
-      <div class="icon">📄</div>
-      <div>Total</div>
-      <h4 id="totalLic">0</h4>
-    </div>
-  </div>
-  <div class="card card-small">
-    <div class="card-body text-center">
-      <div class="icon">⏳</div>
-      <div>Andamento</div>
-      <h4 id="andamentoLic">0</h4>
-    </div>
-  </div>
-  <div class="card card-small">
-    <div class="card-body text-center">
-      <div class="icon">🏆</div>
-      <div>Ganhas</div>
-      <h4 id="ganhasLic">0</h4>
-    </div>
-  </div>
-  <div class="card card-small">
-    <div class="card-body text-center">
-      <div class="icon">❌</div>
-      <div>Perdidas</div>
-      <h4 id="perdidasLic">0</h4>
-    </div>
-  </div>
-</div>
-
-<!-- Filtros compactos em toolbar -->
-<div class="filtros-toolbar mb-3 d-flex flex-wrap gap-2 align-items-center">
-
-  <select id="filtroMes" class="form-select filtro-select">
-    <option value="">Mês</option>
-    <option value="01">Janeiro</option>
-    <option value="02">Fevereiro</option>
-    <option value="03">Março</option>
-    <option value="04">Abril</option>
-    <option value="05">Maio</option>
-    <option value="06">Junho</option>
-    <option value="07">Julho</option>
-    <option value="08">Agosto</option>
-    <option value="09">Setembro</option>
-    <option value="10">Outubro</option>
-    <option value="11">Novembro</option>
-    <option value="12">Dezembro</option>
-  </select>
-
-  <input type="text" id="filtroOrgao" class="form-control filtro-input" placeholder="Órgão">
-
-  <select id="filtroEstado" class="form-select filtro-select">
-    <option value="">Estado</option>
-    <option value="CE">CE</option>
-    <option value="PB">PB</option>
-    <option value="PE">PE</option>
-    <option value="RN">RN</option>
-    <option value="BA">BA</option>
-  </select>
-
-  <button class="btn btn-primary" onclick="abrirNova()">Nova Licitação</button>
-
-</div>
-
-<div id="alertaHoje"></div>
-
-<div class="row" id="lista
+<!-- Dashboard cards compactos e elegantes -->
+<div class="dashboard">
+  <div class="card dashboard-card">
+    <div class="card-body text
