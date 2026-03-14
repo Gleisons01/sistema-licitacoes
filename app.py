@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
 import sqlite3
 import os
+import psycopg2
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 
@@ -9,18 +11,38 @@ UPLOAD_FOLDER = "uploads"
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+DATABASE_URL = os.getenv("DATABASE_URL")
+
 
 def conectar():
-    conn = sqlite3.connect("banco.db")
-    conn.row_factory = sqlite3.Row
-    return conn
+
+    if DATABASE_URL:
+        url = urlparse(DATABASE_URL)
+
+        conn = psycopg2.connect(
+            host=url.hostname,
+            database=url.path[1:],
+            user=url.username,
+            password=url.password,
+            port=url.port
+        )
+
+        return conn
+
+    else:
+        conn = sqlite3.connect("banco.db")
+        conn.row_factory = sqlite3.Row
+        return conn
 
 
 def criar_banco():
+
     conn = conectar()
-    conn.execute("""
+    cur = conn.cursor()
+
+    cur.execute("""
     CREATE TABLE IF NOT EXISTS licitacoes(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         data TEXT,
         hora TEXT,
         pregao TEXT,
@@ -34,6 +56,7 @@ def criar_banco():
         edital TEXT
     )
     """)
+
     conn.commit()
     conn.close()
 
@@ -53,16 +76,18 @@ def painel():
 
 @app.route("/listar")
 def listar():
+
     conn = conectar()
-    dados = conn.execute("SELECT * FROM licitacoes").fetchall()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM licitacoes ORDER BY data")
+
+    colunas = [desc[0] for desc in cur.description]
+    dados = [dict(zip(colunas, row)) for row in cur.fetchall()]
+
     conn.close()
 
-    lista = []
-
-    for l in dados:
-        lista.append(dict(l))
-
-    return jsonify(lista)
+    return jsonify(dados)
 
 
 @app.route("/salvar", methods=["POST"])
@@ -75,16 +100,15 @@ def salvar():
 
         if file.filename != "":
             edital_nome = file.filename
-            caminho = os.path.join(UPLOAD_FOLDER, edital_nome)
-            file.save(caminho)
+            file.save(os.path.join(UPLOAD_FOLDER, edital_nome))
 
     conn = conectar()
+    cur = conn.cursor()
 
-    conn.execute("""
-    INSERT INTO licitacoes(
-        data,hora,pregao,uasg,estado,orgao,servico,valor,modalidade,status,edital
-    )
-    VALUES (?,?,?,?,?,?,?,?,?,?,?)
+    cur.execute("""
+    INSERT INTO licitacoes
+    (data,hora,pregao,uasg,estado,orgao,servico,valor,modalidade,status,edital)
+    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """, (
         request.form["data"],
         request.form["hora"],
@@ -108,32 +132,22 @@ def salvar():
 @app.route("/editar/<int:id>", methods=["POST"])
 def editar(id):
 
-    edital_nome = request.form.get("edital_antigo", "")
-
-    if "edital" in request.files:
-        file = request.files["edital"]
-
-        if file.filename != "":
-            edital_nome = file.filename
-            caminho = os.path.join(UPLOAD_FOLDER, edital_nome)
-            file.save(caminho)
-
     conn = conectar()
+    cur = conn.cursor()
 
-    conn.execute("""
+    cur.execute("""
     UPDATE licitacoes SET
-    data=?,
-    hora=?,
-    pregao=?,
-    uasg=?,
-    estado=?,
-    orgao=?,
-    servico=?,
-    valor=?,
-    modalidade=?,
-    status=?,
-    edital=?
-    WHERE id=?
+    data=%s,
+    hora=%s,
+    pregao=%s,
+    uasg=%s,
+    estado=%s,
+    orgao=%s,
+    servico=%s,
+    valor=%s,
+    modalidade=%s,
+    status=%s
+    WHERE id=%s
     """, (
         request.form["data"],
         request.form["hora"],
@@ -145,7 +159,6 @@ def editar(id):
         request.form["valor"],
         request.form["modalidade"],
         request.form["status"],
-        edital_nome,
         id
     ))
 
@@ -159,7 +172,10 @@ def editar(id):
 def excluir(id):
 
     conn = conectar()
-    conn.execute("DELETE FROM licitacoes WHERE id=?", (id,))
+    cur = conn.cursor()
+
+    cur.execute("DELETE FROM licitacoes WHERE id=%s", (id,))
+
     conn.commit()
     conn.close()
 
@@ -171,7 +187,8 @@ def baixar(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
 
 
-# CONFIGURAÇÃO PARA RENDER
 if __name__ == "__main__":
+
     port = int(os.environ.get("PORT", 5000))
+
     app.run(host="0.0.0.0", port=port)

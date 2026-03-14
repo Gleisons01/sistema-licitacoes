@@ -46,3 +46,8 @@ background:#ffc107;
 .status-cinza{
 background:#6c757d;
 }
+
+.card-hoje{
+border-left:4px solid #0d6efd;
+background:#f8fbff;
+}
