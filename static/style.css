@@ -1,53 +1,49 @@
+body{
+background:#f5f7fb;
+}
+
 .card{
-cursor:pointer;
+border-radius:12px;
 transition:0.2s;
-font-size:13px;
-border-radius:8px;
+cursor:pointer;
+border:1px solid #eee;
 }
 
 .card:hover{
-transform:scale(1.02);
-box-shadow:0 4px 12px rgba(0,0,0,0.15);
+transform:translateY(-3px);
+box-shadow:0 8px 18px rgba(0,0,0,0.08);
 }
 
-.card p{
-margin:2px 0;
-font-size:12px;
-}
-
-.data-licitacao{
-font-weight:bold;
-color:#0d6efd;
+.card-hoje{
+border-left:4px solid #0d6efd;
+background:#f8fbff;
 }
 
 .status{
-width:9px;
-height:9px;
+width:10px;
+height:10px;
 border-radius:50%;
 display:inline-block;
 }
 
-.status-azul{
-background:#0d6efd;
+.status-verde{background:#28a745;}
+.status-vermelho{background:#dc3545;}
+.status-azul{background:#0d6efd;}
+.status-amarelo{background:#ffc107;}
+.status-cinza{background:#6c757d;}
+
+.dashboard{
+display:flex;
+gap:10px;
+margin-bottom:20px;
 }
 
-.status-verde{
-background:#198754;
+.dashboard .card{
+flex:1;
+text-align:center;
+padding:10px;
 }
 
-.status-vermelho{
-background:#dc3545;
-}
-
-.status-amarelo{
-background:#ffc107;
-}
-
-.status-cinza{
-background:#6c757d;
-}
-
-.card-hoje{
-border-left:2px solid #0d6efd;
-background:#f8fbff;
+#alertaHoje{
+margin-bottom:10px;
 }

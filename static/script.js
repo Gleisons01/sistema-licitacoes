@@ -21,10 +21,20 @@ async function carregar(){
 let r = await fetch("/listar")
 let dados = await r.json()
 
-let filtro = document.getElementById("filtroMes").value
+let filtroMes = document.getElementById("filtroMes").value
+let filtroOrgao = document.getElementById("filtroOrgao") ? document.getElementById("filtroOrgao").value.toLowerCase() : ""
+let filtroEstado = document.getElementById("filtroEstado") ? document.getElementById("filtroEstado").value : ""
 
-if(filtro){
-dados = dados.filter(l => l.data.startsWith(filtro))
+if(filtroMes){
+dados = dados.filter(l => l.data.startsWith(filtroMes))
+}
+
+if(filtroOrgao){
+dados = dados.filter(l => l.orgao.toLowerCase().includes(filtroOrgao))
+}
+
+if(filtroEstado){
+dados = dados.filter(l => l.estado === filtroEstado)
 }
 
 let total=dados.length
@@ -49,6 +59,24 @@ dados.sort((a,b)=> new Date(a.data)-new Date(b.data))
 
 let hoje = new Date()
 hoje = hoje.getFullYear()+"-"+String(hoje.getMonth()+1).padStart(2,'0')+"-"+String(hoje.getDate()).padStart(2,'0')
+
+let licHoje = dados.filter(l => l.data === hoje)
+
+if(document.getElementById("alertaHoje")){
+if(licHoje.length > 0){
+
+document.getElementById("alertaHoje").innerHTML = `
+<div class="alert alert-primary">
+⚠ Você possui <b>${licHoje.length}</b> licitação(ões) hoje
+</div>
+`
+
+}else{
+
+document.getElementById("alertaHoje").innerHTML = ""
+
+}
+}
 
 let html=""
 
@@ -169,6 +197,16 @@ modal.hide()
 
 })
 
+if(document.getElementById("filtroMes")){
 document.getElementById("filtroMes").addEventListener("change",carregar)
+}
+
+if(document.getElementById("filtroOrgao")){
+document.getElementById("filtroOrgao").addEventListener("keyup",carregar)
+}
+
+if(document.getElementById("filtroEstado")){
+document.getElementById("filtroEstado").addEventListener("change",carregar)
+}
 
 document.addEventListener("DOMContentLoaded",carregar)
